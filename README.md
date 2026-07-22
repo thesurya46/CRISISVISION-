@@ -11,7 +11,7 @@ CRISISVISION-AI is an advanced, AI-powered crisis management and intelligence pl
 - **Interactive Dashboard**: A comprehensive, real-time dashboard for a high-level overview of active situations and intelligence feeds.
 
 ## Tech Stack
-
+ 
 - **Frontend**: React, Vite, Tailwind CSS, Framer Motion, Recharts
 - **Backend**: Express.js, Node.js, tRPC
 - **Database & ORM**: PostgreSQL, Drizzle ORM
