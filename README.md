@@ -1,4 +1,4 @@
-# CRISISVISION-AI 
+# CRISISVISION-AI  
 
 CRISISVISION-AI is an advanced, AI-powered crisis management and intelligence platform designed to provide real-time insights, proactive alert feeds, and predictive analytics for severe events.
 
