@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, varchar, float, timestamp } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, varchar, float, timestamp, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -79,3 +79,33 @@ export const resources = mysqlTable("resources", {
 
 export type Resource = typeof resources.$inferSelect;
 export type InsertResource = typeof resources.$inferInsert;
+
+// Notifications Table
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: mysqlEnum("type", ["critical", "warning", "info"]).notNull().default("info"),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+// Weather Reports Table
+export const weatherReports = mysqlTable("weatherReports", {
+  id: int("id").autoincrement().primaryKey(),
+  zone: varchar("zone", { length: 255 }).notNull(),
+  temperature: float("temperature").notNull(),
+  humidity: int("humidity").notNull(),
+  windSpeed: float("windSpeed").notNull(),
+  rainfall: float("rainfall").notNull(),
+  conditions: varchar("conditions", { length: 255 }).notNull(),
+  alert: varchar("alert", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WeatherReport = typeof weatherReports.$inferSelect;
+export type InsertWeatherReport = typeof weatherReports.$inferInsert;

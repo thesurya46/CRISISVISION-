@@ -10,6 +10,8 @@ import {
   MessageSquare,
   Zap,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import Dashboard from "./Dashboard";
 import AlertFeed from "./AlertFeed";
@@ -17,6 +19,8 @@ import WeatherIntel from "./WeatherIntel";
 import Resources from "./Resources";
 import AIAssistant from "./AIAssistant";
 import SeverityPredictor from "./SeverityPredictor";
+import NotificationsDropdown from "@/components/NotificationsDropdown";
+import GlobalSearch from "@/components/GlobalSearch";
 import { useState } from "react";
 
 type NavItem = "overview" | "alerts" | "weather" | "resources" | "ai" | "predictor";

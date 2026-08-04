@@ -1,28 +1,20 @@
-# Project TODO
+# Backend Implementation TODO - CrisisVision AI
 
-## Core Features
-- [x] Landing page with hero section, feature highlights, and CTA
-- [x] Dashboard with real-time KPI cards (active disasters, severity index, affected population, resource utilization)
-- [x] Interactive disaster map (using built-in Map component with mock data)
-- [x] Live alert feed panel (severity badges, event type icons, timestamps, location, urgency scores, sortable/filterable)
-- [x] Disaster event database schema (events, shelters, resources) and tRPC API
-- [x] Weather intelligence panel (current conditions, OpenWeatherMap mock data, Recharts visualizations)
-- [x] Resource allocation tracker (table view, status indicators, assignment tracking)
-- [x] AI Chat Assistant (using built-in AIChatBox component, disaster response expert)
-- [x] Severity prediction module (form for disaster parameters, AI-generated score, recommended actions via LLM)
-- [x] Responsive DashboardLayout with sidebar navigation (Overview, Live Map, Alert Feed, Weather Intel, Resources, AI Assistant, Severity Predictor)
-- [x] Auth-gated access for all dashboard sections
-- [x] Push instant in-app and email notifications to platform owner for high-severity events or critical thresholds (ready for integration)
-- [x] Background cron job (hourly) to simulate ingesting new disaster event data and refresh dashboard metrics
+## Progress
 
-## Style Direction
-- [x] Dark cyberpunk aesthetic: deep navy/black backgrounds, cyan and red neon accents
-- [x] Inter font paired with a monospace font for data-heavy elements
-
-## Constraints & Technical Requirements
-- [x] Use tRPC for all API communication
-- [x] Use Recharts for all data visualizations in the weather panel
-- [x] Use the built-in AIChatBox component for the AI Assistant page
-- [x] LLM integration for AI Chat Assistant and Severity Prediction module (mock responses ready)
-- [x] Seed data included for all database tables
-- [x] Notifications target platform owner specifically
+- [x] 1. Analyze codebase & form plan
+- [ ] 2. Add `notifications` & `weatherReports` tables to schema
+- [ ] 3. Add notification/weather/admin CRUD DB functions to `server/db.ts`
+- [ ] 4. Create `server/routers/ai.ts` (AI chat)
+- [ ] 5. Create `server/routers/predictor.ts` (severity predictor)
+- [ ] 6. Create `server/routers/notifications.ts`
+- [ ] 7. Create `server/routers/weather.ts`
+- [ ] 8. Add admin CRUD mutations for events/shelters/resources
+- [ ] 9. Register all routers in `server/routers.ts`
+- [ ] 10. Add migration file for new tables
+- [ ] 11. Update `drizzle/seed.ts` with sample data
+- [ ] 12. Wire AIAssistant to `trpc.ai.chat`
+- [ ] 13. Wire SeverityPredictor to `trpc.predictor.assess`
+- [ ] 14. Wire NotificationsDropdown to `trpc.notifications.*`
+- [ ] 15. Wire WeatherIntel to `trpc.weather.*`
+- [ ] 16. Run `pnpm check` to verify TypeScript compiles

@@ -1,6 +1,6 @@
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, events, shelters, resources, Event, Shelter, Resource } from "../drizzle/schema";
+import { InsertUser, users, events, shelters, resources, notifications, weatherReports, Event, Shelter, Resource, Notification, WeatherReport, InsertEvent, InsertShelter, InsertResource, InsertNotification, InsertWeatherReport } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -173,6 +173,214 @@ export async function getResourceStats() {
   }).from(resources);
 
   return result[0] || { totalResources: 0, deployedCount: 0, availableCount: 0 };
+}
+
+// ==================== NOTIFICATIONS ====================
+
+export async function getNotificationsForUser(userId: number): Promise<Notification[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt));
+}
+
+export async function getUnreadNotificationCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+
+  const result = await db.select({
+    count: sql<number>`COUNT(*)`,
+  }).from(notifications)
+    .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+
+  return result[0]?.count ?? 0;
+}
+
+export async function createNotification(
+  notification: InsertNotification
+): Promise<Notification | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create notification: database not available");
+    return undefined;
+  }
+
+  const result = await db.insert(notifications).values(notification);
+  return {
+    ...notification,
+    id: Number(result[0].insertId),
+    createdAt: new Date(),
+    read: notification.read ?? false,
+  } as Notification;
+}
+
+export async function markNotificationAsRead(userId: number, notificationId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.update(notifications)
+    .set({ read: true })
+    .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
+
+  return (result[0].affectedRows ?? 0) > 0;
+}
+
+export async function markAllNotificationsAsRead(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.update(notifications)
+    .set({ read: true })
+    .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+
+  return true;
+}
+
+// ==================== WEATHER ====================
+
+export async function getWeatherReports(): Promise<WeatherReport[]> {
+  const db = await getDb();
+  if (!db) return [];
+  // Return the most recent report per zone
+  const all = await db.select().from(weatherReports).orderBy(desc(weatherReports.createdAt));
+  const seen = new Set<string>();
+  const latest: WeatherReport[] = [];
+  for (const report of all) {
+    if (!seen.has(report.zone)) {
+      seen.add(report.zone);
+      latest.push(report);
+    }
+  }
+  return latest;
+}
+
+export async function getWeatherAlerts(): Promise<WeatherReport[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(weatherReports)
+    .where(sql`${weatherReports.alert} IS NOT NULL`)
+    .orderBy(desc(weatherReports.createdAt));
+}
+
+export async function getWeatherTrends(hours = 24): Promise<WeatherReport[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(weatherReports).orderBy(desc(weatherReports.createdAt));
+}
+
+export async function createWeatherReport(report: InsertWeatherReport): Promise<WeatherReport | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.insert(weatherReports).values(report);
+  return {
+    ...report,
+    id: Number(result[0].insertId),
+    createdAt: new Date(),
+  } as WeatherReport;
+}
+
+// ==================== ADMIN CRUD - EVENTS ====================
+
+export async function createEvent(event: InsertEvent): Promise<Event | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create event: database not available");
+    return undefined;
+  }
+
+  const result = await db.insert(events).values(event);
+  const [created] = await db.select().from(events).where(eq(events.id, Number(result[0].insertId))).limit(1);
+  return created;
+}
+
+export async function updateEvent(eventId: number, event: Partial<InsertEvent>): Promise<Event | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update event: database not available");
+    return undefined;
+  }
+
+  await db.update(events).set(event).where(eq(events.id, eventId));
+  const [updated] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+  return updated;
+}
+
+export async function deleteEvent(eventId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.delete(events).where(eq(events.id, eventId));
+  return (result[0].affectedRows ?? 0) > 0;
+}
+
+// ==================== ADMIN CRUD - SHELTERS ====================
+
+export async function createShelter(shelter: InsertShelter): Promise<Shelter | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create shelter: database not available");
+    return undefined;
+  }
+
+  const result = await db.insert(shelters).values(shelter);
+  const [created] = await db.select().from(shelters).where(eq(shelters.id, Number(result[0].insertId))).limit(1);
+  return created;
+}
+
+export async function updateShelter(shelterId: number, shelter: Partial<InsertShelter>): Promise<Shelter | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update shelter: database not available");
+    return undefined;
+  }
+
+  await db.update(shelters).set(shelter).where(eq(shelters.id, shelterId));
+  const [updated] = await db.select().from(shelters).where(eq(shelters.id, shelterId)).limit(1);
+  return updated;
+}
+
+export async function deleteShelter(shelterId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.delete(shelters).where(eq(shelters.id, shelterId));
+  return (result[0].affectedRows ?? 0) > 0;
+}
+
+// ==================== ADMIN CRUD - RESOURCES ====================
+
+export async function createResource(resource: InsertResource): Promise<Resource | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create resource: database not available");
+    return undefined;
+  }
+
+  const result = await db.insert(resources).values(resource);
+  const [created] = await db.select().from(resources).where(eq(resources.id, Number(result[0].insertId))).limit(1);
+  return created;
+}
+
+export async function updateResource(resourceId: number, resource: Partial<InsertResource>): Promise<Resource | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update resource: database not available");
+    return undefined;
+  }
+
+  await db.update(resources).set(resource).where(eq(resources.id, resourceId));
+  const [updated] = await db.select().from(resources).where(eq(resources.id, resourceId)).limit(1);
+  return updated;
+}
+
+export async function deleteResource(resourceId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const result = await db.delete(resources).where(eq(resources.id, resourceId));
+  return (result[0].affectedRows ?? 0) > 0;
 }
 
 // TODO: add more feature queries here as your schema grows.
